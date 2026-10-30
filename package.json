@@ -1,1 +1,1 @@
-{"name":"draw-arena","private":true,"workspaces":["apps/*"],"scripts":{"start":"npm start --workspace=server","test":"npm test --workspace=server"}}
+{"name":"draw-arena","private":true,"scripts":{"start":"wrangler dev --port 3000","deploy":"wrangler deploy"}}

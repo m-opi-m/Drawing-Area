@@ -20,7 +20,7 @@ COLORS.forEach((c,i)=>{const b=document.createElement('button');b.style.backgrou
  b.onclick=()=>{color=c;erase=false;[...$('sw').children].forEach(x=>x.className='');b.className='on'};$('sw').append(b)});
 $('eraser').onclick=()=>{erase=!erase;$('eraser').style.background=erase?'#6c4cf1':'';$('eraser').style.color=erase?'#fff':''};
 applyLang();
-const sc=document.createElement('script');sc.src=(window.SERVER_URL||'')+'/socket.io/socket.io.js';sc.onload=boot;sc.onerror=()=>($('err').textContent=t('noserver'));document.head.append(sc);
+boot();
 function log(x,sys){const d=document.createElement('div');d.textContent=x;if(sys)d.className='sys';$('chat').append(d);$('chat').scrollTop=1e9}
 function overlay(html,btn){const o=$('overlay');o.replaceChildren();if(!html){o.style.display='none';return}o.style.display='flex';
  const p=document.createElement('div');p.textContent=html;o.append(p);if(btn){const b=document.createElement('button');b.className='secondary';b.textContent=t('again');b.onclick=()=>location.reload();o.append(b)}}
@@ -33,7 +33,14 @@ function render(x){$('home').style.display='none';$('game').style.display='grid'
  $('status').textContent+=x.phase!='LOBBY'?'  •  '+t('round')+' '+x.round+'/'+x.rounds:'';
  $('tools').style.display=x.phase=='DRAWING'&&me_?'flex':'none';if(x.phase!='WORD_SELECTION'||!me_)$('opts').replaceChildren();
  if(x.phase=='LOBBY')overlay(t('wait')+' '+t('waitSub')+x.id);else if(x.phase!='MATCH_END')overlay('')}
-function boot(){s=io(window.SERVER_URL||undefined);s.on('connect',()=>me=s.id);s.on('connect_error',()=>($('err').textContent=t('noserver')));
+function boot(){const H={};let ws=null;const rand=()=>Array.from({length:4},()=>'ABCDEFGHJKMNPQRSTUVWXYZ23456789'[Math.floor(Math.random()*31)]).join('');
+ function open(d,create,tries=0){try{ws&&ws.close()}catch(e){}const code=create?rand():String(d.roomId||'').toUpperCase().slice(0,4);
+  const base=window.SERVER_URL?window.SERVER_URL.replace(/^http/,'ws'):(location.protocol=='https:'?'wss://':'ws://')+location.host;
+  ws=new WebSocket(base+'/ws?'+new URLSearchParams({room:code,name:d.name||'',lang:d.lang||'',create:create?1:0}));
+  ws.onmessage=ev=>{const m=JSON.parse(ev.data);if(m.e=='error:msg'&&m.d=='exists'&&tries<3)return open(d,true,tries+1);H[m.e]&&H[m.e](m.d)};
+  ws.onerror=()=>H['error:msg']&&H['error:msg']('noserver')}
+ s={on:(e,f)=>{H[e]=f},emit:(e,d)=>{if(e=='room:create')return open(d,true);if(e=='room:join')return open(d,false);if(ws&&ws.readyState==1)ws.send(JSON.stringify({e,d}))}};
+ s.on('hello',id=>(me=id));
  const nm=()=>$('name').value.trim()||(L=='ar'?'لاعب':'Player');
  $('create').onclick=()=>{$('err').textContent='';s.emit('room:create',{name:nm(),lang:$('lang').value})};
  $('join').onclick=()=>{$('err').textContent='';s.emit('room:join',{roomId:$('code').value.trim(),name:nm()})};
