@@ -1,0 +1,23 @@
+import { io as c } from 'socket.io-client'; import assert from 'assert'; import { srv } from './index'; import { normalize } from './normalize';
+assert.equal(normalize('أَحْمَد'), normalize('احمد')); assert.equal(normalize('مدرسة'), normalize('مدرسه'));
+srv.listen(3999, async () => {
+  let opts: string[] = [], word = '', live = true;
+  const wait = (ms: number) => new Promise(r => setTimeout(r, ms)); const [a, b, x] = [0, 1, 2].map(() => c('http://localhost:3999'));
+  [a, b].forEach(s => { s.on('word:options', (o: string[]) => (opts = o)); s.on('word:secret', (w: string) => (word = w)); });
+  let rid = '', st: any, err = '', leaks: string[] = [], got = 0;
+  a.on('room:state', (s: any) => { rid = s.id; st = s; }); a.emit('room:create', { name: 'A', lang: 'en', rounds: 1, drawTime: 20 }); await wait(200);
+  assert.equal(st.phase, 'LOBBY'); b.emit('room:join', { roomId: rid, name: 'B' }); await wait(300);
+  x.on('error:msg', (m: string) => (err = m)); x.emit('room:join', { roomId: rid, name: 'X' }); await wait(200); assert.equal(err, 'full', '3rd player must be refused');
+  assert.equal(st.players.length, 2); assert.equal(st.phase, 'WORD_SELECTION', 'auto-start with 2 players');
+  const dr = st.drawerId === a.id ? a : b, gu = dr === a ? b : a;
+    gu.onAny((ev: string, ...args: any[]) => { if (live && word && ev !== 'round:end' && JSON.stringify(args).includes(word)) leaks.push(ev); });
+  gu.on('stroke', (e: any) => { if (e.id === 's2') got++; });
+  gu.emit('word:choose', opts[0]); await wait(100); assert.equal(st.phase, 'WORD_SELECTION', 'guesser cannot choose word');
+  dr.emit('word:choose', opts[0]); await wait(200); assert.equal(st.phase, 'DRAWING');
+  dr.emit('stroke', { id: 's2', color: '#000', size: 4, points: [[1, 2]] }); gu.emit('stroke', { id: 'bad', color: '#f00', size: 4, points: [[0, 0]] }); await wait(100);
+  live = false; gu.emit('guess', 'wrong'); gu.emit('guess', word.toUpperCase()); gu.emit('guess', word); await wait(300);
+  assert.equal(got, 1); assert.equal(st.phase, 'ROUND_END', 'round ends when opponent guesses');
+  const sg = st.players.find((p: any) => p.id === gu.id).score, sd = st.players.find((p: any) => p.id === dr.id).score;
+  assert.ok(sg >= 100 && sg <= 150, 'guesser score ' + sg); assert.equal(sd, 30, 'drawer score / duplicate scoring');
+  assert.deepEqual(leaks, [], 'secret leaked'); console.log('ALL 2-PLAYER TESTS PASSED'); process.exit(0);
+});

@@ -1,0 +1,1 @@
+{"name":"draw-arena","private":true,"workspaces":["apps/*"],"scripts":{"start":"npm start --workspace=server","test":"npm test --workspace=server"}}

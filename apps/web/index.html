@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>DRAW ARENA — ارسم وخمّن</title>
+<meta name="description" content="لعبة رسم وتخمين بين لاعبين أونلاين">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="nav"><div class="logo"><span>🎨</span> DRAW<b>ARENA</b></div><button id="ui" class="ghost" aria-label="Language">EN</button></header>
+<main>
+<section id="home" class="hero">
+  <div class="hero-text"><h1 data-t="h1"></h1><p data-t="sub"></p>
+    <ol class="steps"><li data-t="s1"></li><li data-t="s2"></li><li data-t="s3"></li></ol></div>
+  <div class="card form">
+    <label for="name" data-t="name"></label><input id="name" maxlength="20" autocomplete="nickname">
+    <label for="lang" data-t="wordsLang"></label><select id="lang"><option value="ar">العربية</option><option value="en">English</option></select>
+    <button id="create" class="primary" data-t="create"></button>
+    <div class="or"><span data-t="or"></span></div>
+    <div class="row"><input id="code" maxlength="4" data-p="code" autocomplete="off"><button id="join" class="secondary" data-t="join"></button></div>
+    <p id="err" class="err" role="alert"></p>
+  </div>
+</section>
+<section id="game" style="display:none">
+  <aside class="card"><h3 data-t="players"></h3><div id="players"></div>
+    <div class="roomcode"><span data-t="room"></span><b id="rc"></b><button id="copy" class="ghost" data-t="copy"></button></div></aside>
+  <div class="card board">
+    <div class="bar"><div id="hint" class="hint"></div><div id="timer" class="timer"></div></div>
+    <div class="canvas-wrap"><canvas id="cv" width="800" height="600"></canvas><div id="overlay" class="overlay" style="display:none"></div></div>
+    <div id="tools" class="tools" style="display:none"><div id="sw" class="sw"></div><input id="size" type="range" min="2" max="40" value="6" aria-label="size"><button id="eraser" class="ghost" data-t="eraser"></button></div>
+    <div id="opts" class="opts"></div><div id="status" class="status"></div>
+  </div>
+  <aside class="card chat"><h3 data-t="chat"></h3><div id="chat"></div><input id="msg" data-p="guess" maxlength="100" autocomplete="off"></aside>
+</section>
+</main>
+<footer>© DRAW ARENA</footer>
+<script src="config.js"></script><script src="app.js"></script>
+</body></html>
